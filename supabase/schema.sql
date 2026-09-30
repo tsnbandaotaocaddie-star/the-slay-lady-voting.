@@ -1,0 +1,12 @@
+create extension if not exists pgcrypto;
+create table public.events(id uuid primary key default gen_random_uuid(),slug text unique not null,title text not null,venue text,logo_url text,status text not null default 'draft' check(status in('draft','open','closed')),duration_seconds int not null default 60,started_at timestamptz,ends_at timestamptz,created_at timestamptz default now());
+create table public.candidates(id uuid primary key default gen_random_uuid(),event_id uuid not null references public.events(id) on delete cascade,code text not null,name text not null,image_url text not null,sort_order int not null,unique(event_id,code));
+create table public.votes(id uuid primary key default gen_random_uuid(),event_id uuid not null references public.events(id) on delete cascade,candidate_id uuid not null references public.candidates(id) on delete cascade,device_token text not null,created_at timestamptz default now(),unique(event_id,device_token));
+alter table public.events enable row level security; alter table public.candidates enable row level security; alter table public.votes enable row level security;
+grant select on public.events,public.candidates to anon; grant select on public.events,public.candidates to authenticated;
+create policy "public read events" on public.events for select to anon,authenticated using(true);
+create policy "public read candidates" on public.candidates for select to anon,authenticated using(true);
+create view public.vote_results with (security_invoker=true) as select c.id candidate_id,c.code,c.name,c.image_url,count(v.id)::int votes from public.candidates c left join public.votes v on v.candidate_id=c.id group by c.id,c.code,c.name,c.image_url,c.sort_order order by c.sort_order;
+grant select on public.vote_results to anon,authenticated;
+alter publication supabase_realtime add table public.events; alter publication supabase_realtime add table public.votes;
+insert into public.events(slug,title,venue) values('the-slay-lady','THE SLAY LADY','20/10 Golf Event');

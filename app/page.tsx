@@ -1,0 +1,1 @@
+export default function Home(){return <main className="center"><div className="panel"><div className="eyebrow">BẢO LONG • GOLF EVENT</div><h1>THE SLAY LADY</h1><p>Live Voting System</p><div className="actions"><a href="/admin">BTC / Admin</a><a href="/vote">Mobile Vote</a><a href="/result">Presenter</a></div></div></main>}
